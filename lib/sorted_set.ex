@@ -11,9 +11,14 @@ defmodule SortedSet do
 
   # Define the type as opaque
 
-  @opaque t :: %__MODULE__{members: RedBlackTree, size: non_neg_integer}
+  @opaque t :: %__MODULE__{members: RedBlackTree, size: non_neg_integer, selector: function}
   @doc false
-  defstruct members: RedBlackTree.new, size: 0
+  defstruct members: RedBlackTree.new, size: 0,
+            selector: &SortedSet.identity/1
+
+  def identity(i) do
+    i
+  end
 
   @doc ~S"""
   Returns a new `SortedSet`, initialized with the unique, sorted values of
@@ -25,13 +30,17 @@ defmodule SortedSet do
       "#SortedSet<[]>"
 
       iex> inspect SortedSet.new([1,3,5])
-      "#SortedSet<[1, 3, 5]>"
+      "#SortedSet<[{1, 1}, {3, 3}, {5, 5}]>"
   """
-  def new(members \\ []) do
-    Enum.reduce(members, %SortedSet{}, fn(member, set) ->
-      put(set, member)
-    end)
+  def new(selector, members) do 
+    Enum.reduce(members, %SortedSet{selector: selector},
+      fn(member, set) -> put(set, member) end)
   end
+  
+  def new(members \\ []) do
+    new(&SortedSet.identity/1, members)
+  end
+
 
   @doc ~S"""
   Returns the number of elements in a `SortedSet`.
@@ -54,10 +63,17 @@ defmodule SortedSet do
       [1,3,5]
   """
   def to_list(%SortedSet{members: members}) do
-    Enum.reduce(members, [], fn ({key, _value}, acc) ->
-      [key | acc]
+    Enum.reduce(members, [], fn ({_key, value}, acc) ->
+      [value | acc]
     end) |> Enum.reverse
   end
+ 
+  def to_list_of_key_and_value(%SortedSet{members: members}) do
+    Enum.reduce(members, [], fn ({key, value} = element, acc) ->
+      [element | acc]
+    end) |> Enum.reverse
+  end
+
 
   @doc ~S"""
   Returns a `SortedSet` with all of the members of `set` plus `element`.
@@ -72,9 +88,9 @@ defmodule SortedSet do
       iex> SortedSet.to_list SortedSet.put(set, 2)
       [1,2,3,5]
   """
-  def put(%SortedSet{members: members}, element) do
-    new_tree = RedBlackTree.insert members, element, element
-    %SortedSet{members: new_tree, size: new_tree.size}
+  def put(%SortedSet{members: members, selector: selector}, element) do
+    new_tree = RedBlackTree.insert members, (selector).(element), element
+    %SortedSet{members: new_tree, selector: selector, size: new_tree.size}
   end
 
   @doc ~S"""
@@ -94,9 +110,9 @@ defmodule SortedSet do
       iex> SortedSet.to_list SortedSet.delete(set, 2)
       []
   """
-  def delete(%SortedSet{members: members}, element) do
-    new_tree = RedBlackTree.delete members, element
-    %SortedSet{members: new_tree, size: new_tree.size}
+  def delete(%SortedSet{members: members, selector: selector}, element) do
+    new_tree = RedBlackTree.delete members, (selector).(element)
+    %SortedSet{members: new_tree, selector: selector, size: new_tree.size}
   end
 
   ## SortedSet predicate methods
@@ -114,8 +130,8 @@ defmodule SortedSet do
       iex> SortedSet.member?(set, 0)
       false
   """
-  def member?(%SortedSet{members: tree}, element) do
-    RedBlackTree.has_key? tree, element
+  def member?(%SortedSet{members: tree, selector: selector}, element) do
+    RedBlackTree.has_key? tree, (selector).(element)
   end
 
   # If the sizes are not equal, no need to check members
@@ -229,7 +245,7 @@ defmodule SortedSet do
     set2
   end
 
-  @doc ~S"""
+    @doc ~S"""
   Returns a `SortedSet` containing the items contained in both `set1` and
   `set2`.
 
@@ -310,7 +326,8 @@ defimpl Inspect, for: SortedSet do
   import Inspect.Algebra
 
   def inspect(set, opts) do
-    concat ["#SortedSet<", Inspect.List.inspect(SortedSet.to_list(set), opts), ">"]
+    concat ["#SortedSet<", set  |> SortedSet.to_list_of_key_and_value
+                                |> Inspect.List.inspect(opts), ">"]
   end
 end
 

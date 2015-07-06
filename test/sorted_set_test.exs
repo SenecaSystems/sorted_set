@@ -118,8 +118,29 @@ defmodule SortedSetTest do
   end
 
   test "it implements the Inspect protocol" do
-    assert "#SortedSet<[0, 1, 2, 5, 6]>" == inspect SortedSet.new [1,0,5,2,5,6,2]
+    assert "#SortedSet<[{0, 0}, {1, 1}, {2, 2}, {5, 5}, {6, 6}]>" == inspect SortedSet.new [1,0,5,2,5,6,2]
     assert "#SortedSet<[]>" == inspect SortedSet.new
-
   end
+
+ test "it keep order of selected values" do
+    assert [{1,100},{50,30},{100,1},{200,5}] == 
+      [{100,1},{50,30},{1,100},{200,5}]
+      |> Enum.into(%SortedSet{selector: fn {a, _b} -> a end})
+      |> SortedSet.to_list
+  end
+
+  test "it delete the selected values" do
+    assert [{1,100},{100,1},{200,5}] == 
+      [{100,1},{50,30},{1,100},{200,5}]
+      |> Enum.into(%SortedSet{selector: fn {a, _b} -> a end})
+      |> SortedSet.delete({50, 30})
+      |> SortedSet.to_list
+ end
+
+  test "it check the membership of an element" do
+   assert SortedSet.new(fn {a, _b} -> a end, [])
+          |> SortedSet.put({50, 40})
+          |> SortedSet.member?({50, 40}) 
+  end
+
 end
