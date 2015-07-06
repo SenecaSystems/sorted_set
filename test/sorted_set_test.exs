@@ -118,7 +118,7 @@ defmodule SortedSetTest do
   end
 
   test "it implements the Inspect protocol" do
-    assert "#SortedSet<[0, 1, 2, 5, 6]>" == inspect SortedSet.new [1,0,5,2,5,6,2]
+    assert "#SortedSet<[{0, 0}, {1, 1}, {2, 2}, {5, 5}, {6, 6}]>" == inspect SortedSet.new [1,0,5,2,5,6,2]
     assert "#SortedSet<[]>" == inspect SortedSet.new
   end
 
