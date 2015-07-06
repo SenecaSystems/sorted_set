@@ -130,8 +130,8 @@ defmodule SortedSet do
       iex> SortedSet.member?(set, 0)
       false
   """
-  def member?(%SortedSet{members: tree}, element) do
-    RedBlackTree.has_key? tree, element
+  def member?(%SortedSet{members: tree, selector: selector}, element) do
+    RedBlackTree.has_key? tree, (selector).(element)
   end
 
   # If the sizes are not equal, no need to check members
