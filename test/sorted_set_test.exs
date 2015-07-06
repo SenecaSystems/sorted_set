@@ -136,4 +136,11 @@ defmodule SortedSetTest do
       |> SortedSet.delete({50, 30})
       |> SortedSet.to_list
  end
+
+  test "it check the membership of an element" do
+   assert SortedSet.new(fn {a, _b} -> a end, [])
+          |> SortedSet.put({50, 40})
+          |> SortedSet.member?({50, 40}) 
+  end
+
 end
