@@ -30,7 +30,7 @@ defmodule SortedSet do
       "#SortedSet<[]>"
 
       iex> inspect SortedSet.new([1,3,5])
-      "#SortedSet<[1, 3, 5]>"
+      "#SortedSet<[{1, 1}, {3, 3}, {5, 5}]>"
   """
   def new(selector, members) do 
     Enum.reduce(members, %SortedSet{selector: selector},
@@ -68,9 +68,9 @@ defmodule SortedSet do
     end) |> Enum.reverse
   end
  
-  def to_list_of_key(%SortedSet{members: members}) do
-    Enum.reduce(members, [], fn ({key, _value}, acc) ->
-      [key | acc]
+  def to_list_of_key_and_value(%SortedSet{members: members}) do
+    Enum.reduce(members, [], fn ({key, value} = element, acc) ->
+      [element | acc]
     end) |> Enum.reverse
   end
 
@@ -326,7 +326,7 @@ defimpl Inspect, for: SortedSet do
   import Inspect.Algebra
 
   def inspect(set, opts) do
-    concat ["#SortedSet<", set  |> SortedSet.to_list_of_key 
+    concat ["#SortedSet<", set  |> SortedSet.to_list_of_key_and_value
                                 |> Inspect.List.inspect(opts), ">"]
   end
 end
