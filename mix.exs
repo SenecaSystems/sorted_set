@@ -8,8 +8,8 @@ defmodule SortedSet.Mixfile do
      elixir: "~> 1.0",
      description: "SortedSet implementation for Elixir",
      licenses: ["MIT"],
-     deps: deps,
-     package: package
+     deps: deps(),
+     package: package()
      ]
   end
 
